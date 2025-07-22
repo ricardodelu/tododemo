@@ -1,0 +1,9 @@
+# Ignore these files and directories during Railway deployment
+.git
+.gitignore
+*.md
+TECH-SPEC.md
+PRD.md
+.mvn/wrapper/maven-wrapper.jar
+target/test-classes
+src/test

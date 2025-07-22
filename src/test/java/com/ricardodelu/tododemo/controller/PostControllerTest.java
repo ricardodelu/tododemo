@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -62,5 +63,39 @@ class PostControllerTest {
                 .andExpect(jsonPath("$[1].title").value("Second Post"))
                 .andExpect(jsonPath("$[1].content").value("Second Content"))
                 .andExpect(jsonPath("$[1].author").value("Author2"));
+    }
+
+    @Test
+    void testGetPostById() throws Exception {
+        // Create and save a test post
+        Post testPost = new Post("Test Post", "Test Content", "Test Author");
+        Post savedPost = postRepository.save(testPost);
+
+        mockMvc.perform(get("/posts/" + savedPost.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(savedPost.getId()))
+                .andExpect(jsonPath("$.title").value("Test Post"))
+                .andExpect(jsonPath("$.content").value("Test Content"))
+                .andExpect(jsonPath("$.author").value("Test Author"));
+    }
+
+    @Test
+    void testGetPostByIdNotFound() throws Exception {
+        mockMvc.perform(get("/posts/999"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testDeletePost() throws Exception {
+        // Create and save a test post
+        Post testPost = new Post("Post to Delete", "Delete Content", "Delete Author");
+        Post savedPost = postRepository.save(testPost);
+
+        mockMvc.perform(delete("/posts/" + savedPost.getId()))
+                .andExpect(status().isNoContent());
+        
+        // Verify the post was deleted
+        mockMvc.perform(get("/posts/" + savedPost.getId()))
+                .andExpect(status().isNotFound());
     }
 }
