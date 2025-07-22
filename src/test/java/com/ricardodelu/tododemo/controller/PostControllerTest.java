@@ -2,6 +2,7 @@ package com.ricardodelu.tododemo.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ricardodelu.tododemo.model.Post;
+import com.ricardodelu.tododemo.repository.PostRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -10,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -24,6 +26,9 @@ class PostControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private PostRepository postRepository;
+
     @Test
     void testCreatePost() throws Exception {
         Post newPost = new Post("Test Title", "Test Content", "Test Author");
@@ -37,5 +42,25 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.content").value("Test Content"))
                 .andExpect(jsonPath("$.author").value("Test Author"))
                 .andExpect(jsonPath("$.createdAt").exists());
+    }
+
+    @Test
+    void testGetAllPosts() throws Exception {
+        // Create test posts
+        Post post1 = new Post("First Post", "First Content", "Author1");
+        Post post2 = new Post("Second Post", "Second Content", "Author2");
+        
+        postRepository.save(post1);
+        postRepository.save(post2);
+
+        mockMvc.perform(get("/posts"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].title").value("First Post"))
+                .andExpect(jsonPath("$[0].content").value("First Content"))
+                .andExpect(jsonPath("$[0].author").value("Author1"))
+                .andExpect(jsonPath("$[1].title").value("Second Post"))
+                .andExpect(jsonPath("$[1].content").value("Second Content"))
+                .andExpect(jsonPath("$[1].author").value("Author2"));
     }
 }
